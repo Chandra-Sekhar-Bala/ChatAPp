@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "852336897917-6ulh507gn0kbn43p3j8dd5ghjbfep89c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "codes.chandrasekhar.chtapp",
+            "certificate_hash": "44f3aa20cbe4f68a336a085d7ed98b7ac3e96956"
+          }
+        },
+        {
           "client_id": "852336897917-8qmsauairo6do7r0n8vcfjggsun14inb.apps.googleusercontent.com",
           "client_type": 3
         }

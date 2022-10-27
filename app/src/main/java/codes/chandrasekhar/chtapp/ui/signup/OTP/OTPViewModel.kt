@@ -6,6 +6,8 @@ import android.os.CountDownTimer
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
@@ -16,28 +18,41 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
+enum class TimeOut { LOADING, }
+
 class OTPViewModel(application: Application) : AndroidViewModel(application) {
     private val auth = FirebaseAuth.getInstance()
     private val context = getApplication<Application>().applicationContext
-    private lateinit var verificationID: String
+    private var verificationID: String? = null
 
-    private var timeOut = false
+    private var _timeOut = MutableLiveData<Boolean>()
+    val timeOut: LiveData<Boolean> get() = _timeOut
 
-    private val timer = object : CountDownTimer(60000, 1000) {
+    private var _time = MutableLiveData<Long>()
+    val time: LiveData<Long> get() = _time
+
+    var progress = MutableLiveData<Boolean>()
+
+    private val timer = object : CountDownTimer(30000, 1000) {
         override fun onTick(millisUntilFinished: Long) {
-            timeOut = true
+            if (_timeOut.value == false)
+                _timeOut.value = true
+
+            _time.value = millisUntilFinished / 1000
         }
 
         override fun onFinish() {
-            timeOut = false
+            _timeOut.value = false
         }
     }
 
     fun sendOTP(number: String, activity: Activity) {
+        Log.d("TAG", "send OTP func ${_timeOut.value}")
         // If timer already stared then go out else initiate sending OTP and start timer
-        if (timeOut) return
+        if (timeOut.value == true) return
         timer.start()
-
+        progress.value = true
+        Log.d("TAG", "initiating bro")
         viewModelScope.launch(Dispatchers.IO) {
             val provider = PhoneAuthOptions.newBuilder(auth)
                 .setPhoneNumber(number)
@@ -46,10 +61,12 @@ class OTPViewModel(application: Application) : AndroidViewModel(application) {
                 .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
                     override fun onVerificationCompleted(credential: PhoneAuthCredential) {
                         signInWithPhoneAuthCredential(credential)
+                        progress.value = false
                     }
 
                     override fun onVerificationFailed(p0: FirebaseException) {
-                        TODO("Not yet implemented")
+                        progress.value = false
+                        Toast.makeText(activity, p0.localizedMessage, Toast.LENGTH_SHORT).show()
                     }
 
                     override fun onCodeSent(
@@ -58,6 +75,9 @@ class OTPViewModel(application: Application) : AndroidViewModel(application) {
                     ) {
                         super.onCodeSent(verifyID, p1)
                         verificationID = verifyID
+                        progress.value = false
+                        Log.d("TAG", "verify iD: $verifyID")
+                        Toast.makeText(activity, "OTP Sent Successfully", Toast.LENGTH_SHORT).show()
                     }
                 }).build()
             PhoneAuthProvider.verifyPhoneNumber(provider)
@@ -66,14 +86,19 @@ class OTPViewModel(application: Application) : AndroidViewModel(application) {
 
     // Make a sign-in Credential and try to sign-in
     fun verifyOTP(otp: String) {
-        val credential = PhoneAuthProvider.getCredential(verificationID, otp)
-        signInWithPhoneAuthCredential(credential)
+        progress.value = true
+        Log.d("TAG", "otp $otp")
+        val credential = verificationID?.let { PhoneAuthProvider.getCredential(it, otp) }
+        if (credential != null) {
+            signInWithPhoneAuthCredential(credential)
+        }
     }
 
     fun signInWithPhoneAuthCredential(credential: PhoneAuthCredential) {
-
+        Log.d("TAG", "verifying")
         auth.signInWithCredential(credential).addOnCompleteListener {
             if (it.isSuccessful) {
+                progress.value = false
                 Log.d("TAG", "success")
                 Toast.makeText(
                     context,
@@ -89,7 +114,8 @@ class OTPViewModel(application: Application) : AndroidViewModel(application) {
                 ).show()
             }
         }.addOnFailureListener {
-            Log.d("TAG", "Failed "+ it.message.toString())
+            progress.value = false
+            Log.d("TAG", "Failed " + it.message.toString())
             Toast.makeText(
                 context,
                 it.message.toString(),
