@@ -4,9 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.databinding.DataBindingUtil
-import codes.chandrasekhar.chtapp.R
 import codes.chandrasekhar.chtapp.databinding.ActivityPhoneNumberBinding
+import codes.chandrasekhar.chtapp.ui.signup.OTP.OTPActivity
 
 
 class PhoneNumberActivity : AppCompatActivity() {
@@ -14,7 +13,7 @@ class PhoneNumberActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_phone_number)
+        binding = ActivityPhoneNumberBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.hide()
     }
@@ -41,7 +40,7 @@ class PhoneNumberActivity : AppCompatActivity() {
                 binding.ccp.isValidFullNumber)
     }
 
-    // pass the phone number
+    // Pass the phone number to next and move on
     private fun goToNext(){
         val intent = Intent(this@PhoneNumberActivity, OTPActivity::class.java)
         val number = binding.ccp.fullNumberWithPlus
