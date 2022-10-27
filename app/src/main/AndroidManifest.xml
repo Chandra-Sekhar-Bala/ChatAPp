@@ -26,7 +26,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".ui.signup.OTPVerificationActivity"
+            android:name=".ui.signup.OTPActivity"
             android:exported="false">
 
             <meta-data

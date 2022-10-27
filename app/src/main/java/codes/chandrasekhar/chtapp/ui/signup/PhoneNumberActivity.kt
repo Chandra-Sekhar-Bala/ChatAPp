@@ -1,10 +1,7 @@
 package codes.chandrasekhar.chtapp.ui.signup
 
-import android.R.id
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
-import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
@@ -46,7 +43,7 @@ class PhoneNumberActivity : AppCompatActivity() {
 
     // pass the phone number
     private fun goToNext(){
-        val intent = Intent(this@PhoneNumberActivity, OTPVerificationActivity::class.java)
+        val intent = Intent(this@PhoneNumberActivity, OTPActivity::class.java)
         val number = binding.ccp.fullNumberWithPlus
         intent.putExtra("PHONE_NUMBER", number)
         startActivity(intent)
